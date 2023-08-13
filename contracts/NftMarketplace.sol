@@ -5,14 +5,10 @@ import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
 /**
- * functions we want our NftMarketpalce to have
+ * @title NFT Marketplace
+ * @author Samuel T Muto
+ * @notice A Marketplace for individual who want to sell their NFT and also some can buy the NFT displayed on the marketplace
  */
-
-// 1. `ListItem`: List NFTs on the marketplace
-// 2. `buyItem`: Buy the NFTs
-// 3. `cancelItem`: Cancel a listing
-// 4. `updateListing`: Update Price
-// 5. `withdrawProceeds`: withdraw payment for my bought nfts
 contract NftMarketplace is ReentrancyGuard {
     error NftMarketplace__PriceMustBeAboveZero();
     error NftMarketplace__NotApprovedForMarketplace();
