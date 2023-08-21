@@ -43,7 +43,7 @@ contract NftMarketplace is ReentrancyGuard {
     ///////////////////
     // Modifiers     //
     ///////////////////
-    modifier notListed(address nftAddress, uint256 tokenId, address owner) {
+    modifier notListed(address nftAddress, uint256 tokenId) {
         Listing memory listing = s_listings[nftAddress][tokenId];
         if (listing.price > 0) {
             revert NftMarketplace__AlreadyListed(nftAddress, tokenId);
@@ -51,10 +51,10 @@ contract NftMarketplace is ReentrancyGuard {
         _;
     }
 
-    modifier isOwner(address nftAddress, uint256 tokenId, address spender) {
+    modifier isOwner(address nftAddress, uint256 tokenId, address nft_owner) {
         IERC721 nft = IERC721(nftAddress);
         address owner = nft.ownerOf(tokenId);
-        if (spender != owner) {
+        if (nft_owner != owner) {
             revert NftMarketplace__NotOwner();
         }
         _;
@@ -82,7 +82,7 @@ contract NftMarketplace is ReentrancyGuard {
      */
     function listItem(address nftAddress, uint256 tokenId, uint256 price)
         external
-        notListed(nftAddress, tokenId, msg.sender)
+        notListed(nftAddress, tokenId)
         isOwner(nftAddress, tokenId, msg.sender)
     {
         if (price <= 0) {
@@ -112,9 +112,7 @@ contract NftMarketplace is ReentrancyGuard {
             revert NftMarketplace__PriceNotMet(nftAddress, tokenId, listedItem.price);
         }
         s_proceeds[listedItem.seller] += msg.value;
-        // delete the listing from the marketplace
         delete (s_listings[nftAddress][tokenId]);
-        // transfer the nft to the buyer
         IERC721(nftAddress).safeTransferFrom(listedItem.seller, msg.sender, tokenId);
         emit ItemBought(msg.sender, nftAddress, tokenId, listedItem.price);
     }
@@ -160,7 +158,7 @@ contract NftMarketplace is ReentrancyGuard {
      * @dev Technically, wo could have the contract be the escrow for the NFTs
      * but this way people can still hold their NFTs when listed
      */
-    function withdrawProceeds() external {
+    function withdrawProceeds() external nonReentrant {
         uint256 proceeds = s_proceeds[msg.sender];
         if (proceeds <= 0) {
             revert NftMarketplace__NoProceeds();
